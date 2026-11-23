@@ -26,7 +26,8 @@
     "ctrl-shift-tab": "arc-ext.panes-prev",
     "ctrl-shift-m": "arc-ext.machine",
     "ctrl-shift-d": "arc-ext.pin",
-    "ctrl-shift-g": "arc-ext.folder-new"
+    "ctrl-shift-g": "arc-ext.folder-new",
+    "ctrl-shift-u": "arc-ext.favorite"
   },
   "mod:arc-ext-launcher": {
     "ctrl-n": "arc-ext-launcher.next",

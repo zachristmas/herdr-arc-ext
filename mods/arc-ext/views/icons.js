@@ -4,18 +4,16 @@
 import { div, svg } from "gpui-kit";
 import { h_flex, v_flex, InputState, Input } from "gpui-base";
 import { props, closeOverlay, theme, shared, setShared, readTextFile, appHome, openOverlay } from "herdr";
+import { readSpaceLabel, writeSpaceLabel } from "../lib/spacelabel.js";
 import { ICON_NAMES } from "../lib/icon-names.js";
 
 const ICONS = "arc-ext.icons"; // { [spaceId]: { kind: "emoji" | "icon", value } }
 const SHOWN = 360; // grid cells drawn at once; search narrows the rest
 
-export const iconOf = (spaceId) => (shared(ICONS) ?? {})[spaceId] ?? null;
+export const iconOf = (spaceId) => readSpaceLabel(spaceId, "arc.icon", ICONS);
 
 function saveIcon(spaceId, value) {
-  const all = { ...(shared(ICONS) ?? {}) };
-  if (value) all[spaceId] = value;
-  else delete all[spaceId];
-  setShared(ICONS, all);
+  writeSpaceLabel(spaceId, "arc.icon", value, ICONS);
 }
 
 // What a space shows in its chip: its icon, else `fallback` (its first letter).

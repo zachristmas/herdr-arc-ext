@@ -10,7 +10,7 @@ import { tabMenu, spaceMenu, tabMenuView, tabPickView, menuView, editTheme, clos
 import { hint, isMac } from "./lib/keys.js";
 import { IconPicker, glyph, iconMenu } from "./views/icons.js";
 import { FolderName, folderMenu, folderMenuView, folderPickView, folderName } from "./views/folders.js";
-import { arrange, toggleFolder, isPinned, pinTab, unpinTab } from "./lib/organize.js";
+import { arrange, toggleFolder, isPinned, pinTab, unpinTab, favoritesOn, isFavorite, favorite, unfavorite } from "./lib/organize.js";
 import { LAST_SPACE, machineOf, machineLabel, machineNames, switchMachine } from "./lib/machine.js";
 import { folder, lead, label, paneLabel, tile, badge, own, windowButton, iconButton, row } from "./views/rows.js";
 import { JobQueue } from "./lib/jobqueue.js";
@@ -204,6 +204,10 @@ export default class TerminalsSide extends View {
           const sp = spaces().find((p) => p.active);
           const tab = sp?.tabs.find((c) => c.active);
           if (tab) (isPinned(sp.id, tab.id) ? unpinTab : pinTab)(sp.id, tab.id);
+        } else if (c === "favorite") {
+          const sp = spaces().find((p) => p.active);
+          const tab = sp?.tabs.find((c) => c.active);
+          if (tab) (isFavorite(tab.id) ? unfavorite(tab.id) : favorite(sp.id, tab.id));
         } else if (c === "folder-new") {
           const sp = spaces().find((p) => p.active);
           folderName({ space: sp?.id, tab: sp?.tabs.find((c) => c.active)?.id });
@@ -467,26 +471,33 @@ export default class TerminalsSide extends View {
       );
     };
     const out = [];
-    if (arr.pinned.length) {
+    // Favorites: Arc's tile row, shared by every space of this machine.
+    const favs = favoritesOn(machineOf(space));
+    if (favs.length) {
       out.push(
-        h_flex().id("tm-pins").flex_none().flex_wrap().gap(6).px(10).pb(6).children(
-          arr.pinned.map((c) => {
+        h_flex().id("tm-favs").flex_none().flex_wrap().gap(6).px(10).pb(6).children(
+          favs.map(({ space: fs, tab: c }) => {
             const mine = tabPanes(index, c.id);
             const p = lead(mine);
-            n++;
-            return this.tips.wrap(`pin-${c.id}`, own(div())
-              .id(`tm-pin-${c.id}`)
+            const on = c.active && fs.active;
+            return this.tips.wrap(`fav-${c.id}`, own(div())
+              .id(`tm-fav-${c.id}`)
               .flex_none().w(46).h(46).rounded(12)
               .flex().items_center().justify_center().cursor_pointer()
-              .when(c.active, (el) => el.bg(C.selected).border_1().border_color(C.selectedEdge).shadow_md())
-              .when(!c.active, (el) => el.bg(C.chip).hover((s) => s.bg(C.hover)))
-              .on_click(() => run("tab.select", { id: c.id }))
-              .on_mouse_down("right", (_e, cx) => { this.tips.hideAll(); cx.notify(); tabMenu(c.id, space.id); })
+              .when(on, (el) => el.bg(C.selected).border_1().border_color(C.selectedEdge).shadow_md())
+              .when(!on, (el) => el.bg(C.chip).hover((s) => s.bg(C.hover)))
+              .on_click(() => {
+                if (!fs.active) run("space.select", { id: fs.id });
+                run("tab.select", { id: c.id });
+              })
+              .on_mouse_down("right", (_e, cx) => { this.tips.hideAll(); cx.notify(); tabMenu(c.id, fs.id); })
               .child(tile(t, p, C)), label(c, p));
           }),
         ),
       );
     }
+    // Pinned tabs are ordinary rows, kept above everything else in the space.
+    for (const c of arr.pinned) out.push(tabRow(c, 0));
     for (const f of arr.folders) {
       out.push(
         row(`tm-f-${f.id}`, C)
@@ -503,7 +514,7 @@ export default class TerminalsSide extends View {
       if (f.open) for (const c of f.tabs) out.push(tabRow(c, 14));
       else for (const c of f.tabs) n++;
     }
-    if (arr.pinned.length || arr.folders.length) out.push(div().flex_none().mx(10).my(4).h(1).bg(C.rule));
+    if (arr.pinned.length || arr.folders.length || favs.length) out.push(div().flex_none().mx(10).my(4).h(1).bg(C.rule));
     const rows = arr.rest.map((c) => tabRow(c, 0));
     this.ghosts = this.ghosts.filter((g) => Date.now() - g.born < FAST + 170);
     for (const g of [...this.ghosts].sort((a, b) => a.at - b.at)) {

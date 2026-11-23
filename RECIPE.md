@@ -54,3 +54,7 @@ PRs and Issues call `gh` on the computer showing the window, so they use its act
 ## Pinned tabs and folders
 
 Per space, kept in shared state `arc-ext.organize`. Pinned tabs are a grid of 46px tiles at the top of the tab list (program icon, status dot, name in the tooltip). Folders follow, each a 34px row with a chevron, folder glyph, name and tab count; click toggles it open, right-click offers New Tab in Folder, Rename Folder and Delete Folder (its tabs return to the plain list). Remaining tabs sit below a divider. A tab is pinned, in one folder, or in neither. Right-click a tab: Pin Tab or Unpin Tab, Add to Folder (or New Folder), Remove from Folder. The sidebar's New Folder row makes an empty one. `arc-ext.pin` (ctrl-shift-d, cmd-d) toggles the shown tab's pin and `arc-ext.folder-new` (ctrl-shift-g, cmd-shift-g) makes a folder holding it. The tab-number shortcuts follow this visual order. Not built: drag and drop to reorder or move tabs.
+
+## Pins, folders, favorites and space looks
+
+Stored as terminal labels, so every window attached to a machine's core sees the same sidebar: `arc.pin`, `arc.folder`, `arc.fav` on each terminal of a tab, and `arc.theme`, `arc.icon` (URL-encoded JSON) on each terminal of a space. Pinned tabs are also moved to the front of the core's tab order. Whether a folder is open, and folders with no tabs yet, stay local to each window. A space with no terminals keeps its theme and icon only in the local shared store.

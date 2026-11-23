@@ -10,7 +10,7 @@ import { v_flex } from "gpui-base";
 import { spaces, panes, machines, theme, run, openOverlay, props, closeOverlay, shared, setShared } from "herdr";
 import { iconMenu } from "./icons.js";
 import { folderPick } from "./folders.js";
-import { isPinned, folderOf, pinTab, unpinTab, removeFromFolder } from "../lib/organize.js";
+import { isPinned, folderOf, pinTab, unpinTab, removeFromFolder, isFavorite, favorite, unfavorite } from "../lib/organize.js";
 import { goMachine, machineLabel, machineNames, machineOf } from "../lib/machine.js";
 import { lead, label as tabLabel, tile } from "./rows.js";
 import { JOB } from "../lib/state.js";
@@ -66,7 +66,7 @@ export function rule(S) {
 
 export function tabMenu(tab, space, pane) {
   const split = panes().filter((q) => q.tab === tab).length > 1;
-  const rows = (split ? (pane ? 3 : 2) : 3) + 2 + (folderOf(space, tab) ? 1 : 0);
+  const rows = (split ? (pane ? 3 : 2) : 3) + 3 + (folderOf(space, tab) ? 1 : 0);
   openOverlay({ mod: "arc-ext", kind: "popup", width: 230, height: 22 + rows * 35 + 9, frame: "none", props: { view: "tab-menu", tab, space, pane, split } });
 }
 
@@ -75,7 +75,9 @@ export function tabMenuView() {
   const S = surface(theme());
   const pinned = isPinned(space, tab);
   const inFolder = folderOf(space, tab);
+  const fav = isFavorite(tab);
   const organize = [
+    menuItem(overlay, "fav", fav ? "Remove from Favorites" : "Add to Favorites", () => (fav ? unfavorite(tab) : favorite(space, tab)), false, S),
     menuItem(overlay, "pin", pinned ? "Unpin Tab" : "Pin Tab", () => (pinned ? unpinTab(space, tab) : pinTab(space, tab)), false, S),
     menuItem(overlay, "to-folder", "Add to Folder…", () => folderPick(tab, space), false, S),
     ...(inFolder ? [menuItem(overlay, "out-folder", `Remove from ${inFolder.name}`, () => removeFromFolder(space, tab), false, S)] : []),

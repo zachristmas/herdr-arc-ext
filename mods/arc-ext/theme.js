@@ -4,6 +4,7 @@ import {
   colors as pureColors, backgrounds as pureBackgrounds, isDark as pureIsDark,
 } from "./lib/color.js";
 import { THEMES } from "./lib/state.js";
+import { readSpaceLabel, writeSpaceLabel } from "./lib/spacelabel.js";
 
 export {
   PRESET_SETS, EMPTY, MAX_DOTS, DEFAULT, clamp,
@@ -28,14 +29,14 @@ export function backgrounds(theme) {
 }
 
 export function themeFor(spaceId) {
-  const t = (shared(THEMES) ?? {})[spaceId];
+  const t = readSpaceLabel(spaceId, "arc.theme", THEMES);
   if (!t) return DEFAULT;
   const dots = (t.dots ?? []).map((d) => (d.r === undefined ? { h: d.h, r: clamp((0.85 - d.l) / (0.85 - 0.3), 0, 1) } : d));
   return { ...DEFAULT, ...t, dots };
 }
 
 export function saveTheme(spaceId, theme) {
-  setShared(THEMES, { ...(shared(THEMES) ?? {}), [spaceId]: theme });
+  writeSpaceLabel(spaceId, "arc.theme", theme, THEMES);
 }
 
 export function palette(theme) {
