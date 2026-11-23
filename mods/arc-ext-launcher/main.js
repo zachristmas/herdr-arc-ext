@@ -1,6 +1,6 @@
 import { View, div, svg, image } from "gpui-kit";
 import { v_flex, h_flex, InputState, Input } from "gpui-base";
-import { spaces, panes, machines, knownAgents, run, theme, props, closeOverlay, shared, setShared, nextCommand } from "herdr";
+import { exec, spaces, panes, machines, knownAgents, run, theme, props, closeOverlay, shared, setShared, nextCommand } from "herdr";
 import { OPEN, MODE, STEP, NEW_MENU_AGENTS, RECENT_PANES } from "./lib/state.js";
 
 const ROW = 48;
@@ -36,6 +36,9 @@ function programIcon(g, t) {
 function tile(icon, bg, t) {
   return div().flex_none().w(28).h(28).rounded(7).bg(bg ?? t.raised).flex().items_center().justify_center().child(icon);
 }
+
+// A tab in a space on another machine only opens through herdr-app itself (run() did nothing there).
+const newTab = (args) => exec("herdr-app", ["do", "tab.new", JSON.stringify(args)]).catch(() => run("tab.new", args));
 
 export default class Launcher extends View {
   init(_props, cx) {
@@ -206,13 +209,13 @@ export default class Launcher extends View {
       const pick = mine.find((s) => s.id === last) ?? mine[0];
       if (pick) run("space.select", { id: pick.id });
       else run("space.new", { machine: r.target });
-    } else if (r.kind === "new") run("tab.new", { space: space?.id });
+    } else if (r.kind === "new") newTab({ space: space?.id });
     else if (r.kind === "space") {
       // Start it where the focused pane is, like Herdr's own new space.
       const cwd = panes().find((p) => p.focused && p.cwd)?.cwd;
       run("space.new", cwd ? { folder: cwd } : {});
     } else if (r.kind === "split") run("pane.split", { direction: r.dir });
-    else if (r.kind === "agent") run("tab.new", { name: r.agent.name, space: space?.id, argv: r.agent.run });
+    else if (r.kind === "agent") newTab({ name: r.agent.name, space: space?.id, argv: r.agent.run });
     else if (r.kind === "pane") {
       if (!r.here) run("space.select", { id: r.space.id });
       run("tab.select", { id: r.tab.id });
@@ -220,7 +223,7 @@ export default class Launcher extends View {
     } else if (r.kind === "tab") {
       if (!r.here) run("space.select", { id: r.space.id });
       run("tab.select", { id: r.tab.id });
-    } else if (r.kind === "run") run("tab.new", { space: space?.id, argv: ["sh", "-c", this.filter] });
+    } else if (r.kind === "run") newTab({ space: space?.id, argv: ["sh", "-c", this.filter] });
   }
 
   hint(r, on, t) {

@@ -27,8 +27,8 @@
     "cmd-9": "arc-ext.tab9",
     "ctrl-9": "arc-ext.space9",
     "cmd-d": "arc-ext.pin",
-    "cmd-shift-g": "arc-ext.folder-new",
-    "cmd-shift-d": "arc-ext.favorite"
+    "cmd-g": "arc-ext.folder-new",
+    "cmd-u": "arc-ext.favorite"
   },
   "mod:arc-ext-launcher": {
     "ctrl-n": "arc-ext-launcher.next",
