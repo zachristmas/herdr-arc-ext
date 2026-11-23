@@ -6,7 +6,7 @@
 
 import { View, div, svg } from "gpui-kit";
 import { v_flex, h_flex, InputState, Input } from "gpui-base";
-import { commands, layouts, keys, run, theme, props, closeOverlay, openOverlay, shared, window as win } from "herdr";
+import { commands, layouts, keys, run, theme, props, closeOverlay, openOverlay, shared, window as win, nextCommand } from "herdr";
 
 // The list keeps one height while you move: rows and group titles have fixed
 // heights, and the window shows as many as fit in LIST_H.
@@ -136,6 +136,16 @@ export default class Palette extends View {
     this.input.focus();
     cx.timer.after(600, () => this.input.focus());
     this.at = 0;
+    cx.spawn(async (cx) => {
+      for (;;) {
+        const c = await nextCommand();
+        const last = Math.max(0, (this.rowCount ?? 1) - 1);
+        if (c === "next") this.at = Math.min(this.at + 1, last);
+        else if (c === "prev") this.at = Math.max(this.at - 1, 0);
+        else continue;
+        cx.notify();
+      }
+    });
     // How far the list is scrolled, px.
     this.scroll = 0;
     this.recent = JSON.parse(localStorage.getItem("recent") ?? "[]");
@@ -207,6 +217,7 @@ export default class Palette extends View {
   render() {
     const t = theme();
     const rows = this.rows();
+    this.rowCount = rows.length;
     const bound = keys();
     this.at = Math.min(this.at, Math.max(0, rows.length - 1));
     // One continuous strip: each row (and the group title before it) at a
@@ -299,7 +310,7 @@ export default class Palette extends View {
           .px(22)
           .gap(14)
           .items_center()
-          .child(svg("mods/terminals-palette/command.svg").size(20).text_color(t.foreground))
+          .child(svg("mods/arc-ext-palette/command.svg").size(20).text_color(t.foreground))
           .child(Input.new(this.input).flex_1().h_full().text_size(22).text_color(t.foreground))
           .child(div().px(8).py(3).rounded(6).bg(t.raised).text_size(11).text_color(t.muted).child("Esc")),
       )

@@ -25,5 +25,13 @@
     "ctrl-tab": "arc-ext.panes",
     "ctrl-shift-tab": "arc-ext.panes-prev",
     "ctrl-shift-m": "arc-ext.machine"
+  },
+  "mod:arc-ext-launcher": {
+    "ctrl-n": "arc-ext-launcher.next",
+    "ctrl-p": "arc-ext-launcher.prev"
+  },
+  "mod:arc-ext-palette": {
+    "ctrl-n": "arc-ext-palette.next",
+    "ctrl-p": "arc-ext-palette.prev"
   }
 }

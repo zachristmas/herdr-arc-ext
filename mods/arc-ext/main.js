@@ -70,7 +70,7 @@ function tabPanes(index, id) {
 }
 
 function openPalette() {
-  openOverlay({ mod: "terminals-palette", kind: "dialog", frame: "none", width: 640, height: 520 });
+  openOverlay({ mod: "arc-ext-palette", kind: "dialog", frame: "none", width: 640, height: 520 });
 }
 
 function launch() {
@@ -80,7 +80,7 @@ function launch() {
     setShared(LAUNCHER_OPEN, null);
     return;
   }
-  openOverlay({ mod: "terminals-launcher", kind: "dialog", frame: "none", width: 720, height: 500 });
+  openOverlay({ mod: "arc-ext-launcher", kind: "dialog", frame: "none", width: 720, height: 500 });
 }
 
 function launchMachines() {
@@ -91,7 +91,7 @@ function launchMachines() {
     setShared(LAUNCHER_OPEN, null);
     if (was === "machines") return;
   }
-  openOverlay({ mod: "terminals-launcher", kind: "dialog", frame: "none", width: 720, height: 500, props: { mode: "machines" } });
+  openOverlay({ mod: "arc-ext-launcher", kind: "dialog", frame: "none", width: 720, height: 500, props: { mode: "machines" } });
 }
 
 function switchPanes(back) {
@@ -101,7 +101,7 @@ function switchPanes(back) {
     return;
   }
   if (open) closeOverlay(open);
-  openOverlay({ mod: "terminals-launcher", kind: "dialog", frame: "none", width: 720, height: 500, props: { mode: "panes", reverse: Boolean(back) } });
+  openOverlay({ mod: "arc-ext-launcher", kind: "dialog", frame: "none", width: 720, height: 500, props: { mode: "panes", reverse: Boolean(back) } });
 }
 
 export default class TerminalsSide extends View {

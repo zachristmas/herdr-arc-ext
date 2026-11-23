@@ -3,5 +3,5 @@ This layout is a fork of it. Changes: renamed to arc-ext; a bottom status bar
 (machine, git branch, extension buttons); a machine context so each machine's
 spaces are separate; a machine picker; Windows and Linux keys; a Firefox-style
 Ctrl+Tab most-recently-used switcher; Ctrl+N / Ctrl+P in the launcher and
-palette. terminals-launcher and terminals-palette are copies of Herdr's shipped
+palette. arc-ext-launcher and arc-ext-palette are copies of Herdr's shipped
 terminals layout mods (Apache-2.0) with those changes.

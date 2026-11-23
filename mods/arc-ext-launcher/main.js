@@ -1,6 +1,6 @@
 import { View, div, svg, image } from "gpui-kit";
 import { v_flex, h_flex, InputState, Input } from "gpui-base";
-import { spaces, panes, machines, knownAgents, run, theme, props, closeOverlay, shared, setShared } from "herdr";
+import { spaces, panes, machines, knownAgents, run, theme, props, closeOverlay, shared, setShared, nextCommand } from "herdr";
 import { OPEN, MODE, STEP, NEW_MENU_AGENTS, RECENT_PANES } from "./lib/state.js";
 
 const ROW = 48;
@@ -71,6 +71,18 @@ export default class Launcher extends View {
         cx.notify();
       });
     }
+    // Ctrl+N / Ctrl+P arrive as commands (keys.json, section mod:arc-ext-launcher): a global or
+    // text-input binding of the same chord (macOS binds them) would otherwise take them.
+    cx.spawn(async (cx) => {
+      for (;;) {
+        const c = await nextCommand();
+        const n = Math.max(1, this.rowCount ?? 1);
+        if (c === "next") this.at = (this.at + 1) % n;
+        else if (c === "prev") this.at = (this.at + n - 1) % n;
+        else continue;
+        cx.notify();
+      }
+    });
     this.input.focus();
     cx.timer.after(300, () => this.input.focus());
     cx.spawn(async (cx) => {
@@ -153,9 +165,9 @@ export default class Launcher extends View {
     // Tiles and rows use the popover's own raised surface; the shell tint the
     // launcher had was a green that only worked on a dark panel.
     if (match("new terminal shell")) out.push({ kind: "new", name: "New Terminal", icon: svg("icons/shell.svg").size(15).text_color(t.foreground), bg: t.raised });
-    if (match("split right new terminal")) out.push({ kind: "split", dir: "right", name: "Split Right", icon: svg("mods/terminals-launcher/split-right.svg").size(15).text_color(t.foreground), bg: t.raised });
-    if (match("split down new terminal")) out.push({ kind: "split", dir: "down", name: "Split Down", icon: svg("mods/terminals-launcher/split-down.svg").size(15).text_color(t.foreground), bg: t.raised });
-    if (match("new space")) out.push({ kind: "space", name: "New Space", icon: svg("mods/terminals-launcher/plus.svg").size(15).text_color(t.foreground), bg: t.raised });
+    if (match("split right new terminal")) out.push({ kind: "split", dir: "right", name: "Split Right", icon: svg("mods/arc-ext-launcher/split-right.svg").size(15).text_color(t.foreground), bg: t.raised });
+    if (match("split down new terminal")) out.push({ kind: "split", dir: "down", name: "Split Down", icon: svg("mods/arc-ext-launcher/split-down.svg").size(15).text_color(t.foreground), bg: t.raised });
+    if (match("new space")) out.push({ kind: "space", name: "New Space", icon: svg("mods/arc-ext-launcher/plus.svg").size(15).text_color(t.foreground), bg: t.raised });
     for (const s of spaces()) {
       if ((s.machine ?? "") !== (space?.machine ?? "")) continue;
       for (const tab of s.tabs) {
@@ -239,13 +251,14 @@ export default class Launcher extends View {
           // so it stays legible whichever way round the theme puts them.
           .bg(on ? t.accent : t.raised)
           .text_color(on ? t.accent_foreground : t.muted)
-          .child(svg("mods/terminals-launcher/arrow.svg").size(16)),
+          .child(svg("mods/arc-ext-launcher/arrow.svg").size(16)),
       );
   }
 
   render() {
     const t = theme();
     const rows = this.rows(t);
+    this.rowCount = rows.length;
     const step = shared(STEP) ?? 0;
     if (step !== this.step) {
       const m = Math.max(1, rows.length);
@@ -291,7 +304,7 @@ export default class Launcher extends View {
           .px(22)
           .gap(14)
           .items_center()
-          .child(svg(this.mode === "panes" ? "mods/terminals-launcher/split-right.svg" : "mods/terminals-launcher/search.svg").size(20).text_color(t.foreground))
+          .child(svg(this.mode === "panes" ? "mods/arc-ext-launcher/split-right.svg" : "mods/arc-ext-launcher/search.svg").size(20).text_color(t.foreground))
           .child(Input.new(this.input).flex_1().h_full().text_size(22).text_color(t.foreground)),
       )
       .child(div().h(1).mx(12).bg(t.border))

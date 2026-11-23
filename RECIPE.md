@@ -17,12 +17,12 @@ A column with no title bar and 8px padding around a space-coloured gradient. Ins
 
 - Machines: the machine is the one the shown space lives on. Other machines' spaces are hidden from the dots, the space shortcuts, the launcher and the switcher. The machine chip opens a picker popup; the machine shortcut opens a launcher-style list. Choosing a machine selects its last-used space, or creates one there.
 - Ctrl+Tab: an invisible 200ms MRU switcher. A quick tap flips to the previous pane; holding Ctrl and pressing Tab or Shift+Tab walks the list and wraps; releasing Ctrl commits; Esc, Ctrl+G, Ctrl+C or Ctrl+[ cancels (Windows reserves Ctrl+Esc).
-- Launcher and palette: Ctrl+N and Ctrl+P move the selection.
+- Launcher and palette: Ctrl+N and Ctrl+P move the selection. They are bound per mod (`mod:arc-ext-launcher`, `mod:arc-ext-palette` in keys) so a global Ctrl+N or Ctrl+P binding, or macOS text-field bindings, do not take them.
 - Extension buttons toggle the layout node named in `extensions.json` (`{node, label, icon}`); the button is lit while the node is shown.
 
 ## Built from
 
-Mods copied here: `arc-ext` (sidebar and status bar), `arc-space-pane`, `arc-space-confirm`, `arc-space-toast`, `terminals-launcher`, `terminals-palette`. Not copied: `skillshare` (https://github.com/runkids/skillshare/tree/main/herdr/skillshare-mod). The layout names `workspace-chrome` nowhere; it uses only the mods above and `skillshare`.
+Mods copied here: `arc-ext` (sidebar and status bar), `arc-space-pane`, `arc-space-confirm`, `arc-space-toast`, `arc-ext-launcher`, `arc-ext-palette`. Not copied: `skillshare` (https://github.com/runkids/skillshare/tree/main/herdr/skillshare-mod). The layout names `workspace-chrome` nowhere; it uses only the mods above and `skillshare`.
 
 Keys: `keys.json` (Windows and Linux, ctrl-shift and alt) or `keys.macos.json` (cmd), both under `layout:arc-ext`. Merge into `keys.json`.
 
