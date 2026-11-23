@@ -46,7 +46,7 @@
                   },
                   "focus": {
                     "width": 2,
-                    "color": "#ef8a80"
+                    "color": "#d180ef"
                   },
                   "radius": 12,
                   "gap": 8,
@@ -115,7 +115,7 @@
             }
           ],
           "background": {
-            "image": "mods/arc-ext/grain/grain-fine-2.png",
+            "image": "mods/arc-ext/grain/grain-fine-4.png",
             "fit": "cover"
           },
           "padding": [
@@ -149,8 +149,8 @@
   ],
   "background": {
     "gradient": [
-      "#c2847f",
-      "#92635f"
+      "#412052",
+      "#31183e"
     ],
     "angle": 165
   },

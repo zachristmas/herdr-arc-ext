@@ -44,3 +44,5 @@ Keys: `keys.json` (Windows and Linux, ctrl-shift and alt) or `keys.macos.json` (
 ## Optional extension panels
 
 The layout also holds hidden `pr-panel` and `issues-panel` columns (368px) for the `branch-pr` and `branch-issue` mods from https://github.com/munza/herdr-mods, with PRs and Issues buttons in `extensions.json`. Those mods are not copied here: each needs a Go 1.23+ helper built by its own installer (`go -C helper run ./install`), `gh` signed in for PRs, and a Linear key or GitHub mode for Issues. Without them, delete the two nodes and the two `extensions.json` entries.
+
+`mods/branch-issue` is a copy of Branch Issue with GitHub Issues as the default provider and SSH-alias remotes (`github-cic`) recognised; it needs only `gh`, no helper build. The Linear provider needs the upstream helper. Branch PR is not copied: install it from munza/herdr-mods with Go 1.23+.

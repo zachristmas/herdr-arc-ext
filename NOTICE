@@ -10,3 +10,8 @@ The space icon picker follows Zen Browser's workspace icon picker (emoji tab wit
 tag search, an icons tab, a None button). Its icon set is Ionicons (MIT,
 icon-set/LICENSE-ionicons); the emoji names and tags come from emojibase data via
 emoji-picker-element-data (MIT).
+
+mods/branch-issue is a fork of Branch Issue from munza/herdr-mods
+(https://github.com/munza/herdr-mods, Apache-2.0). Changes: GitHub Issues is the
+default provider (mod.json settings), the Linear helper binary is not shipped, and
+github/reads.js accepts SSH host aliases such as github-cic, as Branch PR does.
