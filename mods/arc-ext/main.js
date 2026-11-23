@@ -10,7 +10,7 @@ import { tabMenu, spaceMenu, tabMenuView, tabPickView, menuView, editTheme, clos
 import { hint, isMac } from "./lib/keys.js";
 import { IconPicker, glyph, iconMenu } from "./views/icons.js";
 import { FolderName, folderMenu, folderMenuView, folderPickView, folderName } from "./views/folders.js";
-import { arrange, toggleFolder, isPinned, pinTab, unpinTab, favoritesOn, isFavorite, favorite, unfavorite } from "./lib/organize.js";
+import { arrange, toggleFolder, moveToFolder,  isPinned, pinTab, unpinTab, favoritesOn, isFavorite, favorite, unfavorite } from "./lib/organize.js";
 import { LAST_SPACE, machineOf, machineLabel, machineNames, switchMachine } from "./lib/machine.js";
 import { folder, lead, label, paneLabel, tile, badge, own, windowButton, iconButton, row } from "./views/rows.js";
 import { JobQueue } from "./lib/jobqueue.js";
@@ -218,6 +218,47 @@ export default class TerminalsSide extends View {
     });
   }
 
+  // Drag a tab row: press, move more than 5px, release over a row, a folder or the favorites.
+  over(target, e, cx) {
+    if (!this.drag) return;
+    if (!this.drag.on) {
+      if (Math.abs(e.position.y - this.drag.y0) < 5) return;
+      this.drag.on = true;
+    }
+    const d = this.drop;
+    if (!d || d.kind !== target.kind || d.id !== target.id || d.after !== target.after) {
+      this.drop = target;
+      cx.notify();
+    }
+  }
+
+  finish(cx) {
+    const drag = this.drag, drop = this.drop;
+    this.drag = null;
+    this.drop = null;
+    if (!drag?.on) return;
+    this.dragged = true;
+    cx.notify();
+    if (!drop || (drop.kind === "tab" && drop.id === drag.tab)) return;
+    const space = spaces().find((s) => s.id === drag.space);
+    if (!space) return;
+    if (drop.kind === "fav") return favorite(space.id, drag.tab);
+    if (drop.kind === "folder") return moveToFolder(space.id, drag.tab, drop.id);
+    const target = space.tabs.find((c) => c.id === drop.id);
+    const mine = space.tabs.find((c) => c.id === drag.tab);
+    if (!target || !mine) return;
+    const arr = arrange(space);
+    const folder = arr.folders.find((f) => f.tabs.some((c) => c.id === target.id));
+    if (arr.pinned.some((c) => c.id === target.id)) pinTab(space.id, drag.tab);
+    else if (folder) moveToFolder(space.id, drag.tab, folder.id);
+    else {
+      unpinTab(space.id, drag.tab);
+      let index = target.index + (drop.after ? 1 : 0);
+      if (mine.index < target.index) index -= 1;
+      run("tab.move", { id: drag.tab, index });
+    }
+  }
+
   hover(id) {
     return (on, cx) => {
       if (on) this.hovered = id;
@@ -300,7 +341,15 @@ export default class TerminalsSide extends View {
       .when(split, (el) => el.h(42).px(4).gap(4).bg(c.active ? C.split : "#00000000").when(c.active, (e) => e.shadow_md()))
       .when(!split && c.active, (el) => el.bg(C.selected).border_1().border_color(C.selectedEdge).shadow_md())
       .when(!split && !c.active, (el) => el.hover((s) => s.bg(C.hover)))
-      .on_click(() => run("tab.select", { id: c.id }))
+      .on_click(() => {
+        if (this.dragged) { this.dragged = false; return; }
+        run("tab.select", { id: c.id });
+      })
+      .on_mouse_down("left", (e) => { this.drag = { tab: c.id, space: space.id, y0: e.position.y, on: false }; })
+      .on_mouse_move((e, cx) => this.over({ kind: "tab", id: c.id, after: e.local_position.y > e.bounds.height / 2 }, e, cx))
+      .when(this.drop?.kind === "tab" && this.drop.id === c.id, (el) =>
+        this.drop.after ? el.border_b(3).border_color(C.selectedEdge) : el.border_t(3).border_color(C.selectedEdge))
+      .when(this.drag?.on && this.drag.tab === c.id, (el) => el.opacity(0.45))
       .on_mouse_down("right", (_e, cx) => {
         this.tips.hideAll();
         cx.notify();
@@ -475,7 +524,7 @@ export default class TerminalsSide extends View {
     const favs = favoritesOn(machineOf(space));
     if (favs.length) {
       out.push(
-        h_flex().id("tm-favs").flex_none().flex_wrap().gap(6).px(10).pb(6).children(
+        h_flex().id("tm-favs").on_mouse_move((e, cx) => this.over({ kind: "fav" }, e, cx)).flex_none().flex_wrap().gap(6).px(10).pb(6).children(
           favs.map(({ space: fs, tab: c }) => {
             const mine = tabPanes(index, c.id);
             const p = lead(mine);
@@ -504,7 +553,9 @@ export default class TerminalsSide extends View {
           .h(34)
           .text_color(C.soft)
           .hover((s) => s.bg(C.hover).text_color(C.text))
-          .on_click(() => toggleFolder(space.id, f.id))
+          .on_click(() => { if (this.dragged) { this.dragged = false; return; } toggleFolder(space.id, f.id); })
+          .on_mouse_move((e, cx) => this.over({ kind: "folder", id: f.id }, e, cx))
+          .when(this.drop?.kind === "folder" && this.drop.id === f.id, (el) => el.bg(C.selected).border_1().border_color(C.selectedEdge))
           .on_mouse_down("right", (_e, cx) => { this.tips.hideAll(); cx.notify(); folderMenu(f.id, space.id); })
           .child(div().flex_none().w(12).text_size(13).text_color(C.soft).child(f.open ? "▾" : "▸"))
           .child(svg("mods/arc-ext/icon-set/folder.svg").size(15).text_color(C.dim))
@@ -734,6 +785,8 @@ export default class TerminalsSide extends View {
       .child(
         v_flex()
           .id("tm-list")
+          .on_mouse_up("left", (_e, cx) => this.finish(cx))
+          .on_hover((on, cx) => { if (!on && this.drag) { this.drag = null; this.drop = null; cx.notify(); } })
           .flex_1()
           .min_h(0)
           .pt(6)

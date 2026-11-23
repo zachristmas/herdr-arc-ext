@@ -60,7 +60,7 @@ async function sortPinsFirst(spaceId) {
   const tabs = tabsOf(spaceId);
   const pinned = tabs.filter((c) => labelsOf(idx, c.id)["arc.pin"]).sort((a, b) => timeOf(labelsOf(idx, a.id)["arc.pin"]) - timeOf(labelsOf(idx, b.id)["arc.pin"]));
   for (let i = 0; i < pinned.length; i++) {
-    if (tabsOf(spaceId).find((c) => c.id === pinned[i].id)?.index !== i + 1) await herdr("tab.move", { id: pinned[i].id, index: i }).catch(() => {});
+    if (tabsOf(spaceId).find((c) => c.id === pinned[i].id)?.index !== i + 1) await herdr("tab.move", { id: pinned[i].id, index: i + 1 }).catch(() => {});
   }
 }
 
