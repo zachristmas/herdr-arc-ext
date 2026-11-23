@@ -218,45 +218,86 @@ export default class TerminalsSide extends View {
     });
   }
 
-  // Drag a tab row: press, move more than 5px, release over a row, a folder or the favorites.
-  over(target, e, cx) {
-    if (!this.drag) return;
-    if (!this.drag.on) {
-      if (Math.abs(e.position.y - this.drag.y0) < 5) return;
-      this.drag.on = true;
+  // Drag a tab row like Zen: the row follows the pointer and the others slide aside to show
+  // where it will land. this.meta is the list as last drawn: [{ id, kind, h }].
+  move(e, cx) {
+    const d = this.drag;
+    if (!d) return;
+    const dy = e.position.y - d.y0;
+    if (!d.on) {
+      if (Math.abs(dy) < 5) return;
+      d.on = true;
+      this.dragged = true; // the release after a drag is not a click
     }
-    const d = this.drop;
-    if (!d || d.kind !== target.kind || d.id !== target.id || d.after !== target.after) {
-      this.drop = target;
-      cx.notify();
+    d.dy = dy;
+    this.plan();
+    cx.notify();
+  }
+
+  plan() {
+    const items = this.meta ?? [];
+    const d = this.drag;
+    const k = items.findIndex((i) => i.id === d.tab);
+    if (k < 0) return;
+    const tops = [];
+    let y = 0;
+    for (const it of items) { tops.push(y); y += it.h + 2; }
+    const C = tops[k] + items[k].h / 2 + d.dy;
+    let bi = -1, best = Infinity;
+    items.forEach((it, j) => {
+      if (j === k || (it.kind !== "tab" && it.kind !== "folder" && it.kind !== "fav")) return;
+      const dist = it.kind === "fav" ? (C >= tops[j] && C <= tops[j] + it.h ? -1 : Infinity) : Math.abs(C - (tops[j] + it.h / 2));
+      if (dist < best) { best = dist; bi = j; }
+    });
+    let drop = null, at = k;
+    if (bi >= 0) {
+      const it = items[bi], mid = tops[bi] + it.h / 2;
+      if (it.kind === "fav") drop = { kind: "fav" };
+      else if (it.kind === "folder") { drop = { kind: "folder", id: it.id }; at = bi + 0.5; }
+      else { drop = { kind: "tab", id: it.id, after: C > mid }; at = bi + (drop.after ? 0.5 : -0.5); }
     }
+    this.drop = drop;
+    // Where every other row ends up with a gap the size of the dragged row at `at`.
+    const order = items.map((it, j) => ({ it, j })).filter(({ j }) => j !== k);
+    let pos = order.findIndex(({ j }) => j > at);
+    if (pos < 0) pos = order.length;
+    if (drop?.kind === "fav") pos = order.findIndex(({ j }) => j > bi);
+    const shifts = new Map();
+    let ny = 0;
+    order.forEach(({ it, j }, n) => {
+      if (n === pos) ny += items[k].h + 2;
+      shifts.set(it.id, ny - tops[j]);
+      ny += it.h + 2;
+    });
+    this.shifts = shifts;
   }
 
   finish(cx) {
     const drag = this.drag, drop = this.drop;
     this.drag = null;
     this.drop = null;
+    this.shifts = null;
     if (!drag?.on) return;
-    this.dragged = true;
     cx.notify();
     if (!drop || (drop.kind === "tab" && drop.id === drag.tab)) return;
     const space = spaces().find((s) => s.id === drag.space);
     if (!space) return;
     if (drop.kind === "fav") return favorite(space.id, drag.tab);
     if (drop.kind === "folder") return moveToFolder(space.id, drag.tab, drop.id);
+    const moveTo = (target, after) => {
+      const mine = space.tabs.find((c) => c.id === drag.tab);
+      let index = target.index + (after ? 1 : 0);
+      if (mine.index < target.index) index -= 1;
+      run("tab.move", { id: drag.tab, index });
+    };
     const target = space.tabs.find((c) => c.id === drop.id);
     const mine = space.tabs.find((c) => c.id === drag.tab);
     if (!target || !mine) return;
     const arr = arrange(space);
     const folder = arr.folders.find((f) => f.tabs.some((c) => c.id === target.id));
     if (arr.pinned.some((c) => c.id === target.id)) pinTab(space.id, drag.tab);
-    else if (folder) moveToFolder(space.id, drag.tab, folder.id);
-    else {
-      unpinTab(space.id, drag.tab);
-      let index = target.index + (drop.after ? 1 : 0);
-      if (mine.index < target.index) index -= 1;
-      run("tab.move", { id: drag.tab, index });
-    }
+    else if (folder) { moveToFolder(space.id, drag.tab, folder.id); moveTo(target, drop.after); }
+    else { unpinTab(space.id, drag.tab); moveTo(target, drop.after); }
   }
 
   hover(id) {
@@ -342,14 +383,12 @@ export default class TerminalsSide extends View {
       .when(!split && c.active, (el) => el.bg(C.selected).border_1().border_color(C.selectedEdge).shadow_md())
       .when(!split && !c.active, (el) => el.hover((s) => s.bg(C.hover)))
       .on_click(() => {
-        if (this.dragged) { this.dragged = false; return; }
+        if (this.dragged) return;
         run("tab.select", { id: c.id });
       })
-      .on_mouse_down("left", (e) => { this.drag = { tab: c.id, space: space.id, y0: e.position.y, on: false }; })
-      .on_mouse_move((e, cx) => this.over({ kind: "tab", id: c.id, after: e.local_position.y > e.bounds.height / 2 }, e, cx))
-      .when(this.drop?.kind === "tab" && this.drop.id === c.id, (el) =>
-        this.drop.after ? el.border_b(3).border_color(C.selectedEdge) : el.border_t(3).border_color(C.selectedEdge))
-      .when(this.drag?.on && this.drag.tab === c.id, (el) => el.opacity(0.45))
+      .on_mouse_down("left", (e) => { this.dragged = false; this.drag = { tab: c.id, space: space.id, y0: e.position.y, on: false }; })
+      .on_mouse_move((e, cx) => this.move(e, cx))
+      .when(this.drag?.on && this.drag.tab === c.id, (el) => el.opacity(0.92).shadow_lg())
       .on_mouse_down("right", (_e, cx) => {
         this.tips.hideAll();
         cx.notify();
@@ -515,16 +554,22 @@ export default class TerminalsSide extends View {
       const h = split ? 42 : 38;
       this.heights[c.id] = h;
       const i = n++;
-      return this.stagger(div().id(`tm-w-${c.id}`).overflow_hidden(), i + 1, c.id, h).child(
+      const dragging = this.drag?.on && this.drag.tab === c.id;
+      let wrap = this.stagger(div().id(`tm-w-${c.id}`).overflow_hidden(), i + 1, c.id, h);
+      if (this.drag?.on) wrap = wrap.top(dragging ? this.drag.dy : this.shifts?.get(c.id) ?? 0);
+      if (this.drag?.on && !dragging) wrap = wrap.transition("top", { duration: 130, easing: "ease-out" });
+      return wrap.child(
         div().w_full().min_w(0).pl(indent).child(this.tab(t, index, space, c, i)),
       );
     };
+    const meta = [];
     const out = [];
     // Favorites: Arc's tile row, shared by every space of this machine.
     const favs = favoritesOn(machineOf(space));
     if (favs.length) {
+      meta.push({ id: "favs", kind: "fav", h: Math.ceil(favs.length / 4) * 52 + 6 });
       out.push(
-        h_flex().id("tm-favs").on_mouse_move((e, cx) => this.over({ kind: "fav" }, e, cx)).flex_none().flex_wrap().gap(6).px(10).pb(6).children(
+        h_flex().id("tm-favs").flex_none().flex_wrap().gap(6).px(10).pb(6).children(
           favs.map(({ space: fs, tab: c }) => {
             const mine = tabPanes(index, c.id);
             const p = lead(mine);
@@ -546,15 +591,20 @@ export default class TerminalsSide extends View {
       );
     }
     // Pinned tabs are ordinary rows, kept above everything else in the space.
-    for (const c of arr.pinned) out.push(tabRow(c, 0));
+    const heightOf = (c) => (tabPanes(index, c.id).length > 1 ? 42 : 38);
+    for (const c of arr.pinned) { meta.push({ id: c.id, kind: "tab", h: heightOf(c) }); out.push(tabRow(c, 0)); }
     for (const f of arr.folders) {
+      meta.push({ id: f.id, kind: "folder", h: 34 });
+      if (f.open) for (const c of f.tabs) meta.push({ id: c.id, kind: "tab", h: heightOf(c) });
       out.push(
         row(`tm-f-${f.id}`, C)
           .h(34)
           .text_color(C.soft)
           .hover((s) => s.bg(C.hover).text_color(C.text))
-          .on_click(() => { if (this.dragged) { this.dragged = false; return; } toggleFolder(space.id, f.id); })
-          .on_mouse_move((e, cx) => this.over({ kind: "folder", id: f.id }, e, cx))
+          .on_mouse_down("left", () => { this.dragged = false; })
+          .on_click(() => { if (this.dragged) return; toggleFolder(space.id, f.id); })
+          .on_mouse_move((e, cx) => this.move(e, cx))
+          .relative().top(this.shifts?.get(f.id) ?? 0).transition("top", { duration: 130, easing: "ease-out" })
           .when(this.drop?.kind === "folder" && this.drop.id === f.id, (el) => el.bg(C.selected).border_1().border_color(C.selectedEdge))
           .on_mouse_down("right", (_e, cx) => { this.tips.hideAll(); cx.notify(); folderMenu(f.id, space.id); })
           .child(div().flex_none().w(12).text_size(13).text_color(C.soft).child(f.open ? "▾" : "▸"))
@@ -565,6 +615,9 @@ export default class TerminalsSide extends View {
       if (f.open) for (const c of f.tabs) out.push(tabRow(c, 14));
       else for (const c of f.tabs) n++;
     }
+    if (arr.pinned.length || arr.folders.length || favs.length) meta.push({ id: "rule", kind: "rule", h: 9 });
+    for (const c of arr.rest) meta.push({ id: c.id, kind: "tab", h: heightOf(c) });
+    this.meta = meta;
     if (arr.pinned.length || arr.folders.length || favs.length) out.push(div().flex_none().mx(10).my(4).h(1).bg(C.rule));
     const rows = arr.rest.map((c) => tabRow(c, 0));
     this.ghosts = this.ghosts.filter((g) => Date.now() - g.born < FAST + 170);
