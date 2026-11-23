@@ -9,6 +9,8 @@ import { div } from "gpui-kit";
 import { v_flex } from "gpui-base";
 import { spaces, panes, machines, theme, run, openOverlay, props, closeOverlay, shared, setShared } from "herdr";
 import { iconMenu } from "./icons.js";
+import { folderPick } from "./folders.js";
+import { isPinned, folderOf, pinTab, unpinTab, removeFromFolder } from "../lib/organize.js";
 import { goMachine, machineLabel, machineNames, machineOf } from "../lib/machine.js";
 import { lead, label as tabLabel, tile } from "./rows.js";
 import { JOB } from "../lib/state.js";
@@ -21,7 +23,7 @@ function job(spec) {
 // What a menu or picker draws with: Herdr's own surface colours, read once per
 // render from theme(). `chip` and `dot` are what rows.js's tile() needs inside
 // a popover: a raised chip, and a ring in the panel colour around a status dot.
-function surface(t) {
+export function surface(t) {
   return {
     panel: t.popover,
     edge: t.border,
@@ -35,11 +37,11 @@ function surface(t) {
   };
 }
 
-function menuPanel(items, S) {
+export function menuPanel(items, S) {
   return v_flex().id("ctx-menu").w_full().p(6).gap(1).rounded(12).border_1().border_color(S.edge).bg(S.panel).shadow_lg().children(items);
 }
 
-function menuItem(overlay, id, label, action, danger, S) {
+export function menuItem(overlay, id, label, action, danger, S) {
   return div()
     .id(`mn-${id}`)
     .h(34)
@@ -58,19 +60,26 @@ function menuItem(overlay, id, label, action, danger, S) {
     .child(label);
 }
 
-function rule(S) {
+export function rule(S) {
   return div().h(1).mx(8).my(4).bg(S.edge);
 }
 
 export function tabMenu(tab, space, pane) {
   const split = panes().filter((q) => q.tab === tab).length > 1;
-  const rows = split ? (pane ? 3 : 2) : 3;
+  const rows = (split ? (pane ? 3 : 2) : 3) + 2 + (folderOf(space, tab) ? 1 : 0);
   openOverlay({ mod: "arc-ext", kind: "popup", width: 230, height: 22 + rows * 35 + 9, frame: "none", props: { view: "tab-menu", tab, space, pane, split } });
 }
 
 export function tabMenuView() {
   const { tab, space, pane, split, overlay } = props();
   const S = surface(theme());
+  const pinned = isPinned(space, tab);
+  const inFolder = folderOf(space, tab);
+  const organize = [
+    menuItem(overlay, "pin", pinned ? "Unpin Tab" : "Pin Tab", () => (pinned ? unpinTab(space, tab) : pinTab(space, tab)), false, S),
+    menuItem(overlay, "to-folder", "Add to Folder…", () => folderPick(tab, space), false, S),
+    ...(inFolder ? [menuItem(overlay, "out-folder", `Remove from ${inFolder.name}`, () => removeFromFolder(space, tab), false, S)] : []),
+  ];
   const items = split
     ? [menuItem(overlay, "separate", "Separate All Tabs", () => job({ kind: "separate", tab }), false, S)]
     : [
@@ -79,6 +88,7 @@ export function tabMenuView() {
         ),
         menuItem(overlay, "rename", "Rename Tab\u2026", () => run("tab.rename", { id: tab }), false, S),
       ];
+  items.unshift(...organize);
   items.push(rule(S));
   if (split && pane) items.push(menuItem(overlay, "close-pane", "Close Pane", () => run("pane.close", { pane }), true, S));
   items.push(menuItem(overlay, "close-tab", "Close Tab", () => closeTab(tab, space), true, S));

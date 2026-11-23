@@ -24,7 +24,9 @@
     "alt-9": "arc-ext.space9",
     "ctrl-tab": "arc-ext.panes",
     "ctrl-shift-tab": "arc-ext.panes-prev",
-    "ctrl-shift-m": "arc-ext.machine"
+    "ctrl-shift-m": "arc-ext.machine",
+    "ctrl-shift-d": "arc-ext.pin",
+    "ctrl-shift-g": "arc-ext.folder-new"
   },
   "mod:arc-ext-launcher": {
     "ctrl-n": "arc-ext-launcher.next",

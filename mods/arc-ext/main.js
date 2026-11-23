@@ -9,6 +9,8 @@ import { JOB, MENU_OPEN, COLLAPSED, WIDTH, RECENT_PANES, LAUNCHER_OPEN, LAUNCHER
 import { tabMenu, spaceMenu, tabMenuView, tabPickView, menuView, editTheme, closeTab, machineMenu, machineMenuView } from "./views/menu.js";
 import { hint, isMac } from "./lib/keys.js";
 import { IconPicker, glyph, iconMenu } from "./views/icons.js";
+import { FolderName, folderMenu, folderMenuView, folderPickView, folderName } from "./views/folders.js";
+import { arrange, toggleFolder, isPinned, pinTab, unpinTab } from "./lib/organize.js";
 import { LAST_SPACE, machineOf, machineLabel, machineNames, switchMachine } from "./lib/machine.js";
 import { folder, lead, label, paneLabel, tile, badge, own, windowButton, iconButton, row } from "./views/rows.js";
 import { JobQueue } from "./lib/jobqueue.js";
@@ -120,6 +122,11 @@ export default class TerminalsSide extends View {
       });
       return;
     }
+    if (props()?.view === "folder-name") {
+      this.folderName = new FolderName();
+      this.folderName.init(cx);
+      return;
+    }
     if (props()?.view === "icons") {
       this.icons = new IconPicker();
       this.icons.init(cx);
@@ -134,7 +141,7 @@ export default class TerminalsSide extends View {
       setShared(MENU_OPEN, props().overlay);
       return;
     }
-    if (props()?.view === "tab-menu" || props()?.view === "tab-pick" || props()?.view === "machine-menu") {
+    if (props()?.view === "tab-menu" || props()?.view === "tab-pick" || props()?.view === "machine-menu" || props()?.view === "folder-menu" || props()?.view === "folder-pick") {
       this.view = props().view;
       setShared(MENU_OPEN, props().overlay);
       return;
@@ -193,7 +200,14 @@ export default class TerminalsSide extends View {
         else if (c === "job") this.runJob(cx, shared(JOB));
 
         else if (c === "theme") editTheme(spaces().find((p) => p.active)?.id);
-        else if (c === "icon") iconMenu(spaces().find((p) => p.active)?.id);
+        else if (c === "pin") {
+          const sp = spaces().find((p) => p.active);
+          const tab = sp?.tabs.find((c) => c.active);
+          if (tab) (isPinned(sp.id, tab.id) ? unpinTab : pinTab)(sp.id, tab.id);
+        } else if (c === "folder-new") {
+          const sp = spaces().find((p) => p.active);
+          folderName({ space: sp?.id, tab: sp?.tabs.find((c) => c.active)?.id });
+        } else if (c === "icon") iconMenu(spaces().find((p) => p.active)?.id);
         else if (/^tab[1-9]$/.test(c)) this.selectTab(Number(c.slice(3)));
         else if (/^space[1-9]$/.test(c)) this.selectSpace(Number(c.slice(5)));
       }
@@ -438,24 +452,70 @@ export default class TerminalsSide extends View {
   }
 
   list(t, index, space) {
+    const C = this.C;
     this.heights = {};
-    const rows = space.tabs.map((c, i) => {
+    const arr = arrange(space);
+    let n = 0;
+    // One tab row with the grow/shrink wrapper the rest of the list uses.
+    const tabRow = (c, indent) => {
       const split = tabPanes(index, c.id).length > 1;
       const h = split ? 42 : 38;
       this.heights[c.id] = h;
-      return this.stagger(div().id(`tm-w-${c.id}`).overflow_hidden(), i + 1, c.id, h).child(this.tab(t, index, space, c, i));
-    });
+      const i = n++;
+      return this.stagger(div().id(`tm-w-${c.id}`).overflow_hidden(), i + 1, c.id, h).child(
+        div().w_full().min_w(0).pl(indent).child(this.tab(t, index, space, c, i)),
+      );
+    };
+    const out = [];
+    if (arr.pinned.length) {
+      out.push(
+        h_flex().id("tm-pins").flex_none().flex_wrap().gap(6).px(10).pb(6).children(
+          arr.pinned.map((c) => {
+            const mine = tabPanes(index, c.id);
+            const p = lead(mine);
+            n++;
+            return this.tips.wrap(`pin-${c.id}`, own(div())
+              .id(`tm-pin-${c.id}`)
+              .flex_none().w(46).h(46).rounded(12)
+              .flex().items_center().justify_center().cursor_pointer()
+              .when(c.active, (el) => el.bg(C.selected).border_1().border_color(C.selectedEdge).shadow_md())
+              .when(!c.active, (el) => el.bg(C.chip).hover((s) => s.bg(C.hover)))
+              .on_click(() => run("tab.select", { id: c.id }))
+              .on_mouse_down("right", (_e, cx) => { this.tips.hideAll(); cx.notify(); tabMenu(c.id, space.id); })
+              .child(tile(t, p, C)), label(c, p));
+          }),
+        ),
+      );
+    }
+    for (const f of arr.folders) {
+      out.push(
+        row(`tm-f-${f.id}`, C)
+          .h(34)
+          .text_color(C.soft)
+          .hover((s) => s.bg(C.hover).text_color(C.text))
+          .on_click(() => toggleFolder(space.id, f.id))
+          .on_mouse_down("right", (_e, cx) => { this.tips.hideAll(); cx.notify(); folderMenu(f.id, space.id); })
+          .child(div().flex_none().w(12).text_size(13).text_color(C.soft).child(f.open ? "▾" : "▸"))
+          .child(svg("mods/arc-ext/icon-set/folder.svg").size(15).text_color(C.dim))
+          .child(div().flex_1().min_w(0).truncate().font_semibold().child(f.name))
+          .child(div().flex_none().text_size(11).text_color(C.dim).child(String(f.tabs.length))),
+      );
+      if (f.open) for (const c of f.tabs) out.push(tabRow(c, 14));
+      else for (const c of f.tabs) n++;
+    }
+    if (arr.pinned.length || arr.folders.length) out.push(div().flex_none().mx(10).my(4).h(1).bg(C.rule));
+    const rows = arr.rest.map((c) => tabRow(c, 0));
     this.ghosts = this.ghosts.filter((g) => Date.now() - g.born < FAST + 170);
     for (const g of [...this.ghosts].sort((a, b) => a.at - b.at)) {
       rows.splice(Math.min(g.at, rows.length), 0,
         div().id(`tm-g-${g.id}`).flex_none().h(g.closing ? 0 : g.h).transition("height", { duration: FAST, easing: "ease-out" }));
     }
-    return rows;
+    return [...out, ...rows];
   }
 
   selectTab(n) {
-    const tabs = spaces().find((p) => p.active)?.tabs.filter((c) => !c.settled) ?? [];
-    const tab = tabs[n - 1];
+    const space = spaces().find((p) => p.active);
+    const tab = space ? arrange(space).ordered.filter((c) => !c.settled)[n - 1] : null;
     if (tab) run("tab.select", { id: tab.id });
   }
 
@@ -597,12 +657,15 @@ export default class TerminalsSide extends View {
 
   render(cx) {
     if (this.status) return this.statusBar(cx);
+    if (this.folderName) return this.folderName.render();
     if (this.icons) return this.icons.render(cx);
     if (this.picker) return this.picker.render();
     if (this.menu) return menuView();
     if (this.view === "tab-menu") return tabMenuView();
     if (this.view === "tab-pick") return tabPickView();
     if (this.view === "machine-menu") return machineMenuView();
+    if (this.view === "folder-menu") return folderMenuView();
+    if (this.view === "folder-pick") return folderPickView();
     const t = theme();
     const index = indexPanes(panes());
     const space = spaces().find((p) => p.active);
@@ -674,6 +737,14 @@ export default class TerminalsSide extends View {
               .on_click(() => run("tab.new", { space: space.id }))
               .child(svg("mods/arc-ext/plus.svg").size(16))
               .child(div().child("New Tab")),
+          )
+          .child(
+            row("tm-new-folder", C)
+              .text_color(C.dim)
+              .hover((s) => s.bg(C.hover).text_color(C.text))
+              .on_click(() => folderName({ space: space.id }))
+              .child(svg("mods/arc-ext/icon-set/folder.svg").size(16))
+              .child(div().child("New Folder")),
           ),
       );
 

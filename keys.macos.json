@@ -25,7 +25,9 @@
     "cmd-8": "arc-ext.tab8",
     "ctrl-8": "arc-ext.space8",
     "cmd-9": "arc-ext.tab9",
-    "ctrl-9": "arc-ext.space9"
+    "ctrl-9": "arc-ext.space9",
+    "cmd-d": "arc-ext.pin",
+    "cmd-shift-g": "arc-ext.folder-new"
   },
   "mod:arc-ext-launcher": {
     "ctrl-n": "arc-ext-launcher.next",
