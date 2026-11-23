@@ -40,3 +40,7 @@ Keys: `keys.json` (Windows and Linux, ctrl-shift and alt) or `keys.macos.json` (
 - The bar shows the machine and, inside a git repo, the branch; the Skillshare button toggles its panel.
 - With two machines connected, the machine chip lists both and each machine shows only its own spaces.
 - Ctrl+Tab flips to the previous pane on a quick tap and walks the list when held; Shift+Tab goes back.
+
+## Optional extension panels
+
+The layout also holds hidden `pr-panel` and `issues-panel` columns (368px) for the `branch-pr` and `branch-issue` mods from https://github.com/munza/herdr-mods, with PRs and Issues buttons in `extensions.json`. Those mods are not copied here: each needs a Go 1.23+ helper built by its own installer (`go -C helper run ./install`), `gh` signed in for PRs, and a Linear key or GitHub mode for Issues. Without them, delete the two nodes and the two `extensions.json` entries.

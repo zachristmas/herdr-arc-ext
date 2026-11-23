@@ -46,7 +46,7 @@
                   },
                   "focus": {
                     "width": 2,
-                    "color": "#80efa0"
+                    "color": "#ef8a80"
                   },
                   "radius": 12,
                   "gap": 8,
@@ -74,9 +74,50 @@
               "min": 380,
               "max": 720,
               "hidden": true
+            },
+            {
+              "id": "pr-panel",
+              "type": "column",
+              "children": [
+                {
+                  "id": "branch-pr",
+                  "type": "block",
+                  "content": {
+                    "mod": "branch-pr"
+                  }
+                }
+              ],
+              "size": {
+                "px": 368
+              },
+              "min": 320,
+              "max": 720,
+              "hidden": true
+            },
+            {
+              "id": "issues-panel",
+              "type": "column",
+              "children": [
+                {
+                  "id": "branch-issue",
+                  "type": "block",
+                  "content": {
+                    "mod": "branch-issue"
+                  }
+                }
+              ],
+              "size": {
+                "px": 368
+              },
+              "min": 320,
+              "max": 720,
+              "hidden": true
             }
           ],
-          "background": "#00000000",
+          "background": {
+            "image": "mods/arc-ext/grain/grain-fine-2.png",
+            "fit": "cover"
+          },
           "padding": [
             8,
             8
@@ -108,8 +149,8 @@
   ],
   "background": {
     "gradient": [
-      "#80a38b",
-      "#607a68"
+      "#c2847f",
+      "#92635f"
     ],
     "angle": 165
   },

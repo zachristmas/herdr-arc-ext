@@ -1,5 +1,15 @@
 [
   {
+    "node": "pr-panel",
+    "label": "PRs",
+    "icon": "mods/branch-pr/icons/pull-request.svg"
+  },
+  {
+    "node": "issues-panel",
+    "label": "Issues",
+    "icon": "mods/branch-issue/icons/issue.svg"
+  },
+  {
     "node": "skillshare-panel",
     "label": "Skillshare",
     "icon": "mods/skillshare/mark.svg"
