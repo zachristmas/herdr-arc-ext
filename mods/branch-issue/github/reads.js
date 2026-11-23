@@ -1,4 +1,8 @@
-import { exec } from "herdr";
+import { exec, appHome } from "herdr";
+import { accountForRemote } from "./accounts.js";
+
+// The gh login for the checkout being read (from its remote's SSH alias), or null.
+let account = null;
 
 const OWNER = "[a-z0-9](?:[a-z0-9-]*[a-z0-9])?";
 const REPO = `${OWNER}/[a-z0-9_.-]+`;
@@ -39,7 +43,10 @@ async function ghApi(args, { missingOK = false, lines = false } = {}) {
   let result;
   try {
     // Never run gh in the checkout: remote paths and GitHub credentials live on different machines.
-    result = await exec("gh", ["api", "--hostname", "github.com", ...args]);
+    const ghArgs = ["api", "--hostname", "github.com", ...args];
+    result = account
+      ? await exec(`${appHome()}/mods/branch-issue/bin/gh-as`, [account, ...ghArgs]).catch(() => exec("gh", ghArgs))
+      : await exec("gh", ghArgs);
   } catch (e) {
     if (/ENOENT|not found|no such file/i.test(e.message))
       throw new Error("Install GitHub CLI (gh) on this computer to read GitHub issues.");
@@ -120,11 +127,14 @@ async function checkout(sp) {
     config("remote"),
     Promise.all(names.map(async (name) => {
       const result = await git(["remote", "get-url", "--", name]);
-      return [name, result.code === 0 ? repositoryFromRemote(result.stdout) : null];
+      return [name, result.code === 0 ? repositoryFromRemote(result.stdout) : null, result.code === 0 ? result.stdout : ""];
     })),
   ]);
-  const byName = new Map(entries);
+  const byName = new Map(entries.map(([name, repo]) => [name, repo]));
+  const urlOf = new Map(entries.map(([name, , url]) => [name, url]));
   const repository = [tracking, "origin", "upstream", ...names].map((name) => byName.get(name)).find(Boolean);
+  const chosen = [tracking, "origin", "upstream", ...names].find((name) => byName.get(name));
+  account = chosen ? await accountForRemote(urlOf.get(chosen)) : null;
   if (!repository) throw new Error("No supported github.com remote was found for this checkout.");
   const repositories = new Map(entries.filter(([, repo]) => repo).map(([, repo]) => [repo.toLowerCase(), repo]));
   return { branch, git, config, repository, repositories, trackingRepo: byName.get(tracking) };

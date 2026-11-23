@@ -15,3 +15,5 @@ mods/branch-issue is a fork of Branch Issue from munza/herdr-mods
 (https://github.com/munza/herdr-mods, Apache-2.0). Changes: GitHub Issues is the
 default provider (mod.json settings), the Linear helper binary is not shipped, and
 github/reads.js accepts SSH host aliases such as github-cic, as Branch PR does.
+
+patches/branch-pr/ holds modified files of Branch PR from munza/herdr-mods (Apache-2.0): the helper and github/*.js now pick the gh account per repository.
