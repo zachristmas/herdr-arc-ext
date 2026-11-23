@@ -1,0 +1,138 @@
+{
+  "id": "root",
+  "cloned_from": {
+    "name": "arc-space",
+    "version": "0.1.17"
+  },
+  "type": "column",
+  "children": [
+    {
+      "id": "tint",
+      "type": "column",
+      "children": [
+        {
+          "id": "grain",
+          "type": "row",
+          "children": [
+            {
+              "id": "sidebar",
+              "type": "block",
+              "content": {
+                "mod": "arc-ext"
+              },
+              "size": {
+                "px": 240
+              },
+              "min": 0,
+              "max": 420,
+              "window_drag": true
+            },
+            {
+              "id": "main",
+              "type": "block",
+              "content": {
+                "tab": "active",
+                "pane": {
+                  "header": {
+                    "content": {
+                      "mod": "arc-space-pane"
+                    },
+                    "height": 38
+                  },
+                  "background": "#17191c",
+                  "border": {
+                    "width": 2,
+                    "color": "#ffffff14"
+                  },
+                  "focus": {
+                    "width": 2,
+                    "color": "#80efa0"
+                  },
+                  "radius": 12,
+                  "gap": 8,
+                  "lone": true
+                }
+              },
+              "radius": 12,
+              "shadow": "lg"
+            },
+            {
+              "id": "skillshare-panel",
+              "type": "column",
+              "children": [
+                {
+                  "id": "skillshare",
+                  "type": "block",
+                  "content": {
+                    "mod": "skillshare"
+                  }
+                }
+              ],
+              "size": {
+                "px": 400
+              },
+              "min": 380,
+              "max": 720,
+              "hidden": true
+            }
+          ],
+          "background": "#00000000",
+          "padding": [
+            8,
+            8
+          ],
+          "gap": 0
+        },
+        {
+          "id": "status",
+          "type": "block",
+          "content": {
+            "mod": "arc-ext",
+            "props": {
+              "role": "status"
+            }
+          },
+          "size": {
+            "px": 28
+          }
+        }
+      ],
+      "background": {
+        "gradient": [
+          "#00000000",
+          "#00000000"
+        ],
+        "angle": 30
+      }
+    }
+  ],
+  "background": {
+    "gradient": [
+      "#80a38b",
+      "#607a68"
+    ],
+    "angle": 165
+  },
+  "theme": "graphite",
+  "colors": {
+    "accent": "#3b82f6",
+    "background": "#131619",
+    "border": "#25282c",
+    "dim": "#8b8f95",
+    "foreground": "#e8e9eb",
+    "hover": "#ffffff0d",
+    "muted": "#a9adb3",
+    "raised": "#202225",
+    "selection": "#264f78",
+    "surface": "#17191c",
+    "terminal_foreground": "#e6e7e9"
+  },
+  "font_size": 15,
+  "terminal_opacity": 0,
+  "titlebar": "none",
+  "traffic_lights": [
+    16,
+    18
+  ],
+  "toast": "arc-space-toast"
+}

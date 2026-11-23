@@ -1,0 +1,30 @@
+{
+  "layout:arc-ext": {
+    "cmd-w": "pane.close",
+    "cmd-t": "arc-ext.launch",
+    "cmd-s": "arc-ext.toggle",
+    "cmd-shift-p": "arc-ext.palette",
+    "cmd-shift-t": "arc-ext.reopen",
+    "cmd-shift-m": "arc-ext.machine",
+    "ctrl-tab": "arc-ext.panes",
+    "ctrl-shift-tab": "arc-ext.panes-prev",
+    "cmd-1": "arc-ext.tab1",
+    "ctrl-1": "arc-ext.space1",
+    "cmd-2": "arc-ext.tab2",
+    "ctrl-2": "arc-ext.space2",
+    "cmd-3": "arc-ext.tab3",
+    "ctrl-3": "arc-ext.space3",
+    "cmd-4": "arc-ext.tab4",
+    "ctrl-4": "arc-ext.space4",
+    "cmd-5": "arc-ext.tab5",
+    "ctrl-5": "arc-ext.space5",
+    "cmd-6": "arc-ext.tab6",
+    "ctrl-6": "arc-ext.space6",
+    "cmd-7": "arc-ext.tab7",
+    "ctrl-7": "arc-ext.space7",
+    "cmd-8": "arc-ext.tab8",
+    "ctrl-8": "arc-ext.space8",
+    "cmd-9": "arc-ext.tab9",
+    "ctrl-9": "arc-ext.space9"
+  }
+}
