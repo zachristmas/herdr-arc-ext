@@ -8,6 +8,7 @@ import { themeFor, palette, apply, backgrounds, find } from "./theme.js";
 import { JOB, MENU_OPEN, COLLAPSED, WIDTH, RECENT_PANES, LAUNCHER_OPEN, LAUNCHER_MODE, LAUNCHER_STEP, LAYOUT } from "./lib/state.js";
 import { tabMenu, spaceMenu, tabMenuView, tabPickView, menuView, editTheme, closeTab, machineMenu, machineMenuView } from "./views/menu.js";
 import { hint, isMac } from "./lib/keys.js";
+import { IconPicker, glyph, iconMenu } from "./views/icons.js";
 import { LAST_SPACE, machineOf, machineLabel, machineNames, switchMachine } from "./lib/machine.js";
 import { folder, lead, label, paneLabel, tile, badge, own, windowButton, iconButton, row } from "./views/rows.js";
 import { JobQueue } from "./lib/jobqueue.js";
@@ -119,6 +120,11 @@ export default class TerminalsSide extends View {
       });
       return;
     }
+    if (props()?.view === "icons") {
+      this.icons = new IconPicker();
+      this.icons.init(cx);
+      return;
+    }
     if (props()?.view === "theme") {
       this.picker = new Picker();
       return;
@@ -187,6 +193,7 @@ export default class TerminalsSide extends View {
         else if (c === "job") this.runJob(cx, shared(JOB));
 
         else if (c === "theme") editTheme(spaces().find((p) => p.active)?.id);
+        else if (c === "icon") iconMenu(spaces().find((p) => p.active)?.id);
         else if (/^tab[1-9]$/.test(c)) this.selectTab(Number(c.slice(3)));
         else if (/^space[1-9]$/.test(c)) this.selectSpace(Number(c.slice(5)));
       }
@@ -478,7 +485,7 @@ export default class TerminalsSide extends View {
           .text_size(11)
           .font_semibold()
           .text_color(C.text)
-          .child(([...space.name][0] ?? "?").toUpperCase()),
+          .child(glyph(space.id, ([...space.name][0] ?? "?").toUpperCase(), 14, C.text)),
       )
       .child(div().flex_none().max_w(110).truncate().font_semibold().text_color(C.text).child(space.name))
       .when(Boolean(path) && path !== space.name, (el) => el.child(div().flex_1().min_w(0).truncate().text_size(11).text_color(C.dim).child(path)));
@@ -529,7 +536,7 @@ export default class TerminalsSide extends View {
             .when(!p.active, (el) => el.text_color(C.dim).hover((s) => s.bg(C.hover).text_color(C.text)))
             .on_click(() => run("space.select", { id: p.id }))
             .on_mouse_down("right", () => spaceMenu(p.id))
-            .child(([...p.name][0] ?? "?").toUpperCase()), p.name, i < 9 ? hint("space", i + 1) : null),
+            .child(glyph(p.id, ([...p.name][0] ?? "?").toUpperCase(), 15, p.active ? C.text : C.dim)), p.name, i < 9 ? hint("space", i + 1) : null),
         ),
       )
       .child(div().flex_1())
@@ -590,6 +597,7 @@ export default class TerminalsSide extends View {
 
   render(cx) {
     if (this.status) return this.statusBar(cx);
+    if (this.icons) return this.icons.render(cx);
     if (this.picker) return this.picker.render();
     if (this.menu) return menuView();
     if (this.view === "tab-menu") return tabMenuView();

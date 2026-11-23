@@ -5,3 +5,8 @@ spaces are separate; a machine picker; Windows and Linux keys; a Firefox-style
 Ctrl+Tab most-recently-used switcher; Ctrl+N / Ctrl+P in the launcher and
 palette. arc-ext-launcher and arc-ext-palette are copies of Herdr's shipped
 terminals layout mods (Apache-2.0) with those changes.
+
+The space icon picker follows Zen Browser's workspace icon picker (emoji tab with
+tag search, an icons tab, a None button). Its icon set is Ionicons (MIT,
+icon-set/LICENSE-ionicons); the emoji names and tags come from emojibase data via
+emoji-picker-element-data (MIT).

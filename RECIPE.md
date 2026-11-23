@@ -18,6 +18,7 @@ A column with no title bar and 8px padding around a space-coloured gradient. Ins
 - Machines: the machine is the one the shown space lives on. Other machines' spaces are hidden from the dots, the space shortcuts, the launcher and the switcher. The machine chip opens a picker popup; the machine shortcut opens a launcher-style list. Choosing a machine selects its last-used space, or creates one there.
 - Ctrl+Tab: an invisible 200ms MRU switcher. A quick tap flips to the previous pane; holding Ctrl and pressing Tab or Shift+Tab walks the list and wraps; releasing Ctrl commits; Esc, Ctrl+G, Ctrl+C or Ctrl+[ cancels (Windows reserves Ctrl+Esc).
 - Launcher and palette: Ctrl+N and Ctrl+P move the selection. They are bound per mod (`mod:arc-ext-launcher`, `mod:arc-ext-palette` in keys) so a global Ctrl+N or Ctrl+P binding, or macOS text-field bindings, do not take them.
+- Space icons: right-click a space, Set Icon. An Emoji tab with search over names and tags, an Icons tab, and None, like Zen. Shown in the sidebar chip and the space dots; the first letter otherwise.
 - Extension buttons toggle the layout node named in `extensions.json` (`{node, label, icon}`); the button is lit while the node is shown.
 
 ## Built from

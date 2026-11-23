@@ -8,6 +8,7 @@
 import { div } from "gpui-kit";
 import { v_flex } from "gpui-base";
 import { spaces, panes, machines, theme, run, openOverlay, props, closeOverlay, shared, setShared } from "herdr";
+import { iconMenu } from "./icons.js";
 import { goMachine, machineLabel, machineNames, machineOf } from "../lib/machine.js";
 import { lead, label as tabLabel, tile } from "./rows.js";
 import { JOB } from "../lib/state.js";
@@ -120,7 +121,7 @@ export function tabPickView() {
 }
 
 export function spaceMenu(spaceId) {
-  openOverlay({ mod: "arc-ext", kind: "popup", width: 230, height: 172, frame: "none", props: { view: "menu", space: spaceId } });
+  openOverlay({ mod: "arc-ext", kind: "popup", width: 230, height: 207, frame: "none", props: { view: "menu", space: spaceId } });
 }
 
 export function menuView() {
@@ -154,6 +155,7 @@ export function menuView() {
     .bg(S.panel)
     .shadow_lg()
     .child(item("theme", "Edit Theme Color\u2026", () => editTheme(space)))
+    .child(item("icon", "Set Icon…", () => iconMenu(space)))
     .child(item("rename", "Rename Space\u2026", () => run("space.rename", { id: space })))
     .child(item("tab", "New Tab", () => run("tab.new", { space })))
     .child(div().h(1).mx(8).my(4).bg(S.edge))
