@@ -50,6 +50,7 @@ export default class Launcher extends View {
     this.where = space?.machine ?? "";
     this.agents = shared(NEW_MENU_AGENTS)?.[this.where] ?? [];
     this.filter = "";
+    this.went = false;
     this.at = (this.mode === "panes" ? this.paneRows().length : this.mode === "machines" ? this.machineRows().length : 0) > 1 ? 1 : 0;
     this.input = InputState.new({ placeholder: this.mode === "machines" ? "Switch machine" : this.mode === "panes" ? "Switch to a pane" : "Search tabs, panes or start something" });
     this.input.on("change", (_e, cx) => {
@@ -200,7 +201,8 @@ export default class Launcher extends View {
   }
 
   go(r) {
-    if (!r) return;
+    if (!r || this.went) return;
+    this.went = true;
     const space = spaces().find((s) => s.active);
     this.dismiss();
     if (r.kind === "machine") {
@@ -294,6 +296,12 @@ export default class Launcher extends View {
         const ctl = e.modifiers?.control;
         // Ctrl+Esc is Windows' Start menu and never reaches the app: Ctrl+G, Ctrl+C and Ctrl+[ cancel too.
         if (e.key === "escape" || (ctl && (e.key === "g" || e.key === "c" || e.key === "["))) return this.dismiss();
+        // Enter can arrive here without the input's submit event (macOS), so act on it directly; go() runs once.
+        if (e.key === "enter" || e.key === "return") {
+          this.go(rows[this.at]);
+          cx.stop_propagation();
+          return;
+        }
         const n = Math.max(1, rows.length);
         if (e.key === "down" || (ctl && e.key === "n") || (ctl && !e.modifiers.shift && e.key === "tab")) this.at = (this.at + 1) % n;
         else if (e.key === "up" || (ctl && e.key === "p") || (ctl && e.modifiers.shift && e.key === "tab")) this.at = (this.at + n - 1) % n;
