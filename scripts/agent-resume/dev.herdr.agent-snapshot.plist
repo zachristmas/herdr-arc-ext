@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- macOS: runs `herdr-resume.mjs snapshot` every 2 minutes. install-macos.sh fills in __HOME__
+     and the node path, then loads it. -->
+<plist version="1.0"><dict>
+<key>Label</key><string>dev.herdr.agent-snapshot</string>
+<key>ProgramArguments</key><array><string>__NODE__</string><string>__HOME__/.claude/hooks/herdr-resume.mjs</string><string>snapshot</string></array>
+<key>EnvironmentVariables</key><dict><key>PATH</key><string>__HOME__/.local/bin:__HOME__/.volta/bin:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string></dict>
+<key>StartInterval</key><integer>120</integer>
+<key>RunAtLoad</key><true/>
+</dict></plist>
