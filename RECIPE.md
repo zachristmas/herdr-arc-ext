@@ -58,3 +58,7 @@ Per space, kept in shared state `arc-ext.organize`. Pinned tabs are a grid of 46
 ## Pins, folders, favorites and space looks
 
 Stored as terminal labels, so every window attached to a machine's core sees the same sidebar: `arc.pin`, `arc.folder`, `arc.fav` on each terminal of a tab, and `arc.theme`, `arc.icon` (URL-encoded JSON) on each terminal of a space. Pinned tabs are also moved to the front of the core's tab order. Whether a folder is open, and folders with no tabs yet, stay local to each window. A space with no terminals keeps its theme and icon only in the local shared store.
+
+## Resuming agents after a core stop
+
+Install `scripts/agent-resume/` (see its README): a Claude SessionStart hook plus a snapshot job that labels each agent terminal with its session id, and `herdr-resume.mjs` to retype the resume commands. Prefer `hc server restart` to `hc server stop`, since restart keeps programs running.
